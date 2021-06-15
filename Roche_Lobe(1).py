@@ -10,6 +10,7 @@ from scipy.integrate import solve_ivp
 import matplotlib.pyplot as plt
 import scipy.constants as con
 
+
 # Sun and Earth Motion
 G = con.G
 m = 1.989*10**30
@@ -19,13 +20,13 @@ M = M1 + M2
 # Distance in AU : semi-major axis
 a = 1
 # Eccentricity Of Orbit
-e = 0.1# 0.0167
+e = 0.2# 0.0167
 # Orbital Period
 P = np.sqrt((4*(np.pi**2)*a**3)/(G*M))
 # radius at apocentre
 ra = a*(1+e)
 # relative velocity at apocentre
-va = np.sqrt((G*M*(2/ra-1/a)))
+va = np.sqrt((G*M*((2/ra)-(1/a))))
 # stellar positions at apocentre
 r1 = (M2/M) * ra
 r2 = (-M1/M) * ra
@@ -44,7 +45,7 @@ m0 = 1*10**-20*m
 #Mass Ratio
 q = (M1/M2) # place inside binary orbit
 
-pi = np.linspace(0,np.pi,10000)
+pi = np.linspace(0,2*np.pi,10000)
 zero = np.linspace(0,0,10000)
 
 
@@ -60,8 +61,8 @@ def binaryorbit(t,g):
     r = np.sqrt(rx**2 + ry**2)
     rL1 = (r*0.49*q**(2/3))/(0.6*q**(2/3)+np.log(1+q**(1/3)))
     Hp = 0.1*rL1
-    dM2dt =  m0*np.exp((0.11-rL1)/Hp)
-    dM1dt = -(m0*np.exp((0.11-rL1)/Hp))
+    dM2dt =  m0*np.exp((0.31-rL1)/Hp)
+    dM1dt = -(m0*np.exp((0.31-rL1)/Hp))
     Px1 = mass_1*(vx1 - vx2)
     Px2 = mass_1*(vx1 - vx2)
     Py1 = mass_2*(vy1 - vy2)
@@ -70,32 +71,11 @@ def binaryorbit(t,g):
     drydt1 = vy1
     drxdt2 = vx2
     drydt2 = vy2  
-    dvxdt1 = (-G*(M2)*rx/r**3) + Px1
-    dvydt1 = (-G*(M2)*ry/r**3) + Py1
-    dvxdt2 = (-G*(M1)*(-rx)/r**3)  + Px2
-    dvydt2 = (-G*(M1)*(-ry)/r**3) + Py2
+    dvxdt1 = (-G*(M2+mass_2)*rx/r**3) + Px1
+    dvydt1 = (-G*(M2+mass_2)*ry/r**3) + Py1
+    dvxdt2 = (-G*(M1-mass_1)*(-rx)/r**3)  + Px2
+    dvydt2 = (-G*(M1-mass_1)*(-ry)/r**3) + Py2
     return[drxdt1,drydt1,dvxdt1,dvydt1,drxdt2,drydt2,dvxdt2,dvydt2,dM1dt,dM2dt]
-
-
-# def binaryorbit(t,g):
-#     x1,y1,vx1,vy1,x2,y2,vx2,vy2,mass_1,mass_2 = g
-#     rx = x1 - x2
-#     ry = y1 - y2
-#     r = np.sqrt(rx**2 + ry**2)
-#     rL1 = (r*0.49*q**(2/3))/(0.6*q**(2/3)+np.log(1+q**(1/3)))
-#     Hp = 0.1*rL1
-#     dM2dt = -dM1dt
-#     drxdt1 = vx1 
-#     drydt1 = vy1
-#     drxdt2 = vx2
-#     drydt2 = vy2
-#     dvxdt1 = -dvxdt2
-#     dvydt1 = -dvydt2
-#     return[drxdt1,drydt1,dvxdt1,dvydt1,drxdt2,drydt2,dvxdt2,dvydt2,dM2dt]
-    
-    
-    
-    
 
 soln1 = solve_ivp(binaryorbit,
                   tspan,
@@ -127,18 +107,6 @@ def masstransfer(q):
     dM1dt = -m0*np.exp((0.1-rL1)/Hp)
     dM2dt =  m0*np.exp((0.1-rL1)/Hp)
     return[dM1dt,dM2dt]
-
-
-  
-def momcheck():
-    V1 = [vx1,vy1]
-    V2 = [vx2,vy2]
-    Px = np.add(M1*V1[0],M2*V2[0])
-    Py = np.add(M1*V1[1],M2*V2[1])
-    Ptot = np.add(Px,Py)
-    return[Ptot]
-
-    
     
 X = []
 def orbitcheckj():
@@ -165,36 +133,40 @@ orbitcheckj()
 rocheloberadius(q)
 A = masstransfer(q)[0]
 B = masstransfer(q)[1]
-momcheck()
-        
 
 
-
-plt.plot(x1,y1,x2,y2)
+plt.plot(x1,y1,color = 'Red',Label = 'Mass 1')
+plt.plot(x2,y2,'--',color = 'blue',Label= 'Mass 2')
 plt.axes().set_aspect('equal')
+plt.xlabel('Distance (au)')
+plt.ylabel('Distance (au)')
+plt.title('e = 0.8')
+plt.legend(loc = 'upper right',frameon = 'false')
+
 plt.show()
 
-plt.plot(pi,rocheloberadius(q)[0])
+plt.plot(pi,rocheloberadius(q)[0],)
+plt.axhline(y=0.20, color='b', linestyle='--')
 plt.xlabel('Orbital Phase')
 plt.ylabel('Roche Lobe Radius')
 plt.show()
 
 plt.plot(pi,A)
+plt.xlabel('Orbital Phase')
+plt.ylabel('Mass transfer')
 plt.show()
 
 plt.plot(pi,B)
-plt.show()
-
-plt.plot(pi,X)
 plt.xlabel('Orbital Phase')
-plt.ylabel('Total Angular Momentum')
+plt.ylabel('Mass transfer')
 plt.show()
 
-plt.plot(pi,momcheck()[0])
+plt.plot(pi,X,color = 'blue',label = 'e = 0.2')
+plt.legend(loc = 'upper right',frameon = 'false')
 plt.xlabel('Orbital Phase')
-plt.ylabel('Momentum')
+plt.ylabel('Angular Momentum ($Kgm^{2}$/s)')
+plt.savefig('Orbit0.2.pdf')
 plt.show()
-
 
 
 
